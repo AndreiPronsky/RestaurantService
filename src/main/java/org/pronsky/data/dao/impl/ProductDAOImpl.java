@@ -18,10 +18,10 @@ public class ProductDAOImpl implements ProductDAO {
 
     private static final String CREATE_PRODUCT = "INSERT INTO products (name, price, quantity, available) " +
             "VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_PRODUCT = "UPDATE products SET name = :name, price = :price, " +
-            "quantity = :quantity, available = :available WHERE id = :id";
-    private static final String FIND_PRODUCT_BY_ID = "SELECT p.id, p.name, p.price, p.quantity, p.available " +
-            "FROM products p WHERE b.id = ?";
+    private static final String UPDATE_PRODUCT = "UPDATE products SET name = ?, price = ?, quantity = ?, available = ? " +
+            "WHERE id = ?";
+    private static final String FIND_PRODUCT_BY_ID = "SELECT p.id, p.name, p.price, p.quantity, p.available, " +
+            "FROM products p WHERE p.id = ?";
     private static final String FIND_ALL_PRODUCTS = "SELECT p.id, p.name, p.price, p.quantity, p.available " +
             "FROM products p";
     private static final String DELETE_PRODUCT = "DELETE FROM products p WHERE p.id = ?";
@@ -32,8 +32,8 @@ public class ProductDAOImpl implements ProductDAO {
     private static final String COLUMN_AVAILABLE = "available";
     private static final PropertyReader propertyReader = PropertyReader.INSTANCE;
     private final String url = propertyReader.getUrl();
-    private final String password = propertyReader.getPassword();
     private final String user = propertyReader.getUser();
+    private final String password = propertyReader.getPassword();
 
     @Override
     public Product getById(Long id) {
@@ -108,26 +108,26 @@ public class ProductDAOImpl implements ProductDAO {
 
     private void prepareStatementForCreate(Product product, PreparedStatement statement) throws SQLException {
         statement.setString(1, product.getName());
-        statement.setString(2, product.getPrice().toString());
+        statement.setString(2, String.valueOf(product.getPrice()));
         statement.setInt(3, product.getQuantity());
         statement.setBoolean(4, product.isAvailable());
-    }
-
-    private void setParameters(Product product, ResultSet result) throws SQLException {
-            while (result.next()) {
-                product.setId(result.getLong(COLUMN_ID));
-                product.setName(result.getString(COLUMN_NAME));
-                product.setPrice(result.getBigDecimal(COLUMN_PRICE));
-                product.setQuantity(result.getInt(COLUMN_QUANTITY));
-                product.setAvailable(result.getBoolean(COLUMN_AVAILABLE));
-            }
     }
 
     private void prepareStatementForUpdate(Product product, PreparedStatement statement) throws SQLException {
         statement.setString(1, product.getName());
-        statement.setString(2, product.getPrice().toString());
+        statement.setString(2, String.valueOf(product.getPrice()));
         statement.setInt(3, product.getQuantity());
         statement.setBoolean(4, product.isAvailable());
         statement.setLong(5, product.getId());
+    }
+
+    private void setParameters(Product product, ResultSet result) throws SQLException {
+        while (result.next()) {
+            product.setId(result.getLong(COLUMN_ID));
+            product.setName(result.getString(COLUMN_NAME));
+            product.setPrice(result.getBigDecimal(COLUMN_PRICE));
+            product.setQuantity(result.getInt(COLUMN_QUANTITY));
+            product.setAvailable(result.getBoolean(COLUMN_AVAILABLE));
+        }
     }
 }
