@@ -1,18 +1,20 @@
 package org.pronsky.service.dto;
 
 import lombok.Data;
-import org.pronsky.data.entities.ProductCategory;
+
+import java.util.Set;
 
 @Data
 public class ProductCategoryDTO {
     private Long id;
     private String name;
-    private ProductCategory.CategoryType type;
+    private Set<CategoryType> types;
 
     public enum CategoryType {
-        VEGETABLE,
-        FRUIT,
-        MEAT,
-        GRAIN
+        PERISHABLE,
+        LONG_TERM,
+        FRIDGE_STORAGE,
+        FREEZER_STORAGE,
+        PANTRY_STORAGE
     }
 }

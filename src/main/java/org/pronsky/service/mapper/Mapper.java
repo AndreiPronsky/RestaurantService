@@ -10,9 +10,14 @@ import org.pronsky.service.dto.ProductDTO;
 @org.mapstruct.Mapper
 public interface Mapper {
     OrderDetailsDTO toDto(OrderDetails entity);
+
     OrderDetails toEntity(OrderDetailsDTO dto);
+
     ProductCategoryDTO toDto(ProductCategory entity);
+
     ProductCategory toEntity(ProductCategoryDTO dto);
+
     ProductDTO toDto(Product entity);
+
     ProductDTO toEntity(ProductDTO dto);
 }

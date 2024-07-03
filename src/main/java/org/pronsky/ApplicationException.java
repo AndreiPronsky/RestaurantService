@@ -1,6 +1,6 @@
 package org.pronsky;
 
-public class ApplicationException extends RuntimeException{
+public class ApplicationException extends RuntimeException {
     public ApplicationException() {
     }
 
