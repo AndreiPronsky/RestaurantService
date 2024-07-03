@@ -14,7 +14,7 @@ public class ProductRepositoryImpl implements ProductRepository {
     private final ProductCategoryDAO categoryDAO;
 
     @Override
-    public Product findById(long id) {
+    public Product findById(Long id) {
         Product product = productDAO.getById(id);
         product.setProductCategories(categoryDAO.getAllByProductId(id));
         return product;
@@ -28,12 +28,14 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public void save(Product product) {
+    public Product save(Product product) {
+        Product saved;
         if (product.getId() != null) {
-            productDAO.update(product);
+            saved = productDAO.update(product);
         } else {
-            productDAO.create(product);
+            saved = productDAO.create(product);
         }
+        return saved;
     }
 
     @Override

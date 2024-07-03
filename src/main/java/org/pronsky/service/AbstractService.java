@@ -7,9 +7,7 @@ public interface AbstractService<K, T> {
 
     List<T> getAll();
 
-    T create(T t);
+    T save(T t);
 
-    T update(T t);
-
-    boolean delete(T t);
+    void delete(T t);
 }
