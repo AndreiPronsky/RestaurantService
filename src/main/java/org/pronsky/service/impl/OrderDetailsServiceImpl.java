@@ -6,6 +6,7 @@ import org.pronsky.service.OrderDetailsService;
 import org.pronsky.service.dto.OrderDetailsDTO;
 import org.pronsky.service.mapper.Mapper;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -28,6 +29,11 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
 
     @Override
     public OrderDetailsDTO save(OrderDetailsDTO orderDetailsDTO) {
+        BigDecimal totalAmount = orderDetailsDTO.getProducts().stream()
+                .map(productDTO -> productDTO.getPrice()
+                        .multiply(BigDecimal.valueOf(productDTO.getQuantity())))
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        orderDetailsDTO.setTotalAmount(totalAmount);
         return mapper.toDto(repository.save(mapper.toEntity(orderDetailsDTO)));
     }
 
