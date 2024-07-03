@@ -11,5 +11,5 @@ public interface AbstractDAO<K, T> {
 
     T update(T t);
 
-    boolean delete(T t);
+    boolean deleteById(K id);
 }
