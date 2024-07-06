@@ -1,12 +1,11 @@
 package org.pronsky;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class Main {
-    private static final Logger log = LogManager.getLogger(Main.class);
 
     public static void main(String[] args) {
-        log.info(" ");
+        log.info("Main started");
     }
 }
