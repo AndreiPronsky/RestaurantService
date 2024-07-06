@@ -1,13 +1,27 @@
 package org.pronsky.service.dto;
 
-import lombok.Data;
-import org.javamoney.moneta.Money;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+import java.math.BigDecimal;
+import java.util.List;
+
+@NoArgsConstructor
+@Getter
+@Setter
+@EqualsAndHashCode
 public class ProductDTO {
     private Long id;
     private String name;
-    private Money price;
+    private BigDecimal price;
     private Integer quantity;
     private boolean available;
+    private List<ProductCategoryDTO> categories;
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

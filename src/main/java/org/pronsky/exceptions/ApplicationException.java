@@ -1,4 +1,4 @@
-package org.pronsky;
+package org.pronsky.exceptions;
 
 public class ApplicationException extends RuntimeException {
     public ApplicationException() {

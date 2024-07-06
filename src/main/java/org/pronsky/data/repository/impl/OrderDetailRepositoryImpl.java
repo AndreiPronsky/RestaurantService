@@ -18,7 +18,7 @@ public class OrderDetailRepositoryImpl implements OrderDetailRepository {
     private final ProductCategoryDAO productCategoryDAO;
 
     @Override
-    public OrderDetails findById(long id) {
+    public OrderDetails findById(Long id) {
         OrderDetails orderDetails = orderDetailsDAO.getById(id);
         List<Product> products = productDAO.getAllByOrderId(id);
         products.forEach(product -> product.setProductCategories(productCategoryDAO.getAllByProductId(product.getId())));
@@ -39,16 +39,18 @@ public class OrderDetailRepositoryImpl implements OrderDetailRepository {
     }
 
     @Override
-    public void save(OrderDetails orderDetails) {
+    public OrderDetails save(OrderDetails orderDetails) {
+        OrderDetails saved;
         if (orderDetails.getId() == null) {
-            orderDetailsDAO.create(orderDetails);
+            saved = orderDetailsDAO.create(orderDetails);
         } else {
-            orderDetailsDAO.update(orderDetails);
+            saved = orderDetailsDAO.update(orderDetails);
         }
+        return saved;
     }
 
     @Override
-    public void delete(OrderDetails orderDetails) {
-        orderDetailsDAO.deleteById(orderDetails.getId());
+    public void delete(Long id) {
+        orderDetailsDAO.deleteById(id);
     }
 }

@@ -1,20 +1,22 @@
 package org.pronsky.data.dao.impl;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.pronsky.data.connection.ConnectionUtil;
 import org.pronsky.data.dao.ProductDAO;
 import org.pronsky.data.entities.Product;
 import org.pronsky.data.entities.ProductCategory;
-import org.pronsky.data.exceptions.UnableToCreateException;
-import org.pronsky.data.exceptions.UnableToDeleteException;
-import org.pronsky.data.exceptions.UnableToFindException;
-import org.pronsky.data.exceptions.UnableToUpdateException;
-import org.pronsky.utils.PropertyReader;
+import org.pronsky.exceptions.UnableToCreateException;
+import org.pronsky.exceptions.UnableToDeleteException;
+import org.pronsky.exceptions.UnableToFindException;
+import org.pronsky.exceptions.UnableToUpdateException;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
+@RequiredArgsConstructor
 public class ProductDAOImpl implements ProductDAO {
 
     private static final String CREATE_PRODUCT = "INSERT INTO products (name, price, quantity, available) " +
@@ -37,16 +39,13 @@ public class ProductDAOImpl implements ProductDAO {
     private static final String COLUMN_PRICE = "price";
     private static final String COLUMN_QUANTITY = "quantity";
     private static final String COLUMN_AVAILABLE = "available";
-    private static final PropertyReader propertyReader = PropertyReader.INSTANCE;
-    private final String url = propertyReader.getUrl();
-    private final String user = propertyReader.getUser();
-    private final String password = propertyReader.getPassword();
+    private final ConnectionUtil connectionUtil;
 
     @Override
     public Product getById(Long id) {
         log.debug("ProductDAOImpl.getById");
         Product product = new Product();
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_PRODUCT_BY_ID)) {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
@@ -61,7 +60,7 @@ public class ProductDAOImpl implements ProductDAO {
     public List<Product> getAll() {
         log.debug("ProductDAOImpl.getAll");
         List<Product> products = new ArrayList<>();
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_ALL_PRODUCTS)) {
             ResultSet result = statement.executeQuery();
             while (result.next()) {
@@ -78,7 +77,7 @@ public class ProductDAOImpl implements ProductDAO {
     @Override
     public Product create(Product product) {
         log.debug("ProductDAOImpl.create");
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(CREATE_PRODUCT, Statement.RETURN_GENERATED_KEYS)) {
             prepareStatementForCreate(product, statement);
             statement.executeUpdate();
@@ -96,7 +95,7 @@ public class ProductDAOImpl implements ProductDAO {
     @Override
     public Product update(Product product) {
         log.debug("ProductDAOImpl.update");
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(UPDATE_PRODUCT)) {
             prepareStatementForUpdate(product, statement);
             statement.executeUpdate();
@@ -109,7 +108,7 @@ public class ProductDAOImpl implements ProductDAO {
     @Override
     public boolean deleteById(Long id) {
         log.debug("ProductDAOImpl.deleteById");
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(DELETE_PRODUCT)) {
             statement.setLong(1, id);
             int affectedRows = statement.executeUpdate();
@@ -123,7 +122,7 @@ public class ProductDAOImpl implements ProductDAO {
     public List<Product> getAllByOrderId(long orderId) {
         log.debug("ProductDAOImpl.getAllByOrderId");
         List<Product> products = new ArrayList<>();
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_ALL_BY_ORDER_ID)) {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
