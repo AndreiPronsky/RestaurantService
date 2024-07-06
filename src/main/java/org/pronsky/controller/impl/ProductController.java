@@ -1,13 +1,12 @@
-package org.pronsky.controller;
+package org.pronsky.controller.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.pronsky.controller.Controller;
 import org.pronsky.service.ProductService;
 import org.pronsky.service.dto.ProductCategoryDTO;
 import org.pronsky.service.dto.ProductDTO;
@@ -22,16 +21,15 @@ import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
-@WebServlet("/products")
-public class ProductController extends HttpServlet {
+public class ProductController implements Controller {
 
     public static final String CONTENT_TYPE = "application/json";
     public static final String CHARSET = "UTF-8";
-    private final ObjectMapper objectMapper;
     private final ProductService productService;
+    private final ObjectMapper objectMapper;
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+    public void doGet(HttpServletRequest req, HttpServletResponse resp) {
         log.info("ProductController.doGet");
         Long id = processParams(req);
         if (id == null) {
@@ -41,9 +39,8 @@ public class ProductController extends HttpServlet {
         }
     }
 
-
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) {
         log.info("ProductController.doPost");
         try (BufferedReader reader = req.getReader()) {
             String payload = getPayload(reader);
@@ -63,7 +60,7 @@ public class ProductController extends HttpServlet {
     }
 
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) {
+    public void doPut(HttpServletRequest req, HttpServletResponse resp) {
         log.info("ProductController.doPut");
         try {
             JsonNode node = objectMapper.readTree(req.getReader());
@@ -80,7 +77,7 @@ public class ProductController extends HttpServlet {
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
+    public void doDelete(HttpServletRequest req, HttpServletResponse resp) {
         log.info("ProductController.doDelete");
         try {
             productService.delete(Long.parseLong(req.getParameter("id")));

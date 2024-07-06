@@ -4,7 +4,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.pronsky.data.entities.OrderDetails;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -15,7 +14,7 @@ import java.util.List;
 @EqualsAndHashCode
 public class OrderDetailsDTO {
     private Long id;
-    private OrderDetails.OrderStatus orderStatus;
+    private OrderStatus orderStatus;
     private List<ProductDTO> products;
     private BigDecimal totalAmount;
 

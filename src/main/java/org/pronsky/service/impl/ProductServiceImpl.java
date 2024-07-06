@@ -10,8 +10,8 @@ import java.util.List;
 
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
-    private final ProductRepository repository;
     private final Mapper mapper;
+    private final ProductRepository repository;
 
     @Override
     public ProductDTO getById(Long id) {
