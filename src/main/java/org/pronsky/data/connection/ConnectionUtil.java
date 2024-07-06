@@ -15,15 +15,10 @@ public class ConnectionUtil {
     private final String user = propertyReader.getUser();
     private final String password = propertyReader.getPassword();
 
-    private ConnectionUtil() {
-        propertyReader = PropertyReader.getInstance();
-    }
-
     public Connection getConnection() {
         try {
-            Class.forName("org.postgresql.Driver");
             return DriverManager.getConnection(url, user, password);
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
             throw new ConnectionException("Unable to connect to database", e);
         }
     }
