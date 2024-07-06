@@ -1,19 +1,21 @@
 package org.pronsky.data.dao.impl;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.pronsky.data.connection.ConnectionUtil;
 import org.pronsky.data.dao.OrderDetailsDAO;
 import org.pronsky.data.entities.OrderDetails;
-import org.pronsky.data.exceptions.UnableToCreateException;
-import org.pronsky.data.exceptions.UnableToDeleteException;
-import org.pronsky.data.exceptions.UnableToFindException;
-import org.pronsky.data.exceptions.UnableToUpdateException;
-import org.pronsky.utils.PropertyReader;
+import org.pronsky.exceptions.UnableToCreateException;
+import org.pronsky.exceptions.UnableToDeleteException;
+import org.pronsky.exceptions.UnableToFindException;
+import org.pronsky.exceptions.UnableToUpdateException;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
+@RequiredArgsConstructor
 public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     private static final String CREATE_ORDER_DETAILS = "INSERT INTO order_details (status_id, total_amount) VALUES (?, ?)";
     private static final String UPDATE_ORDER_DETAILS = "UPDATE order_details SET status_id = ?, total_amount = ?" +
@@ -28,16 +30,13 @@ public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_STATUS = "status_id";
     private static final String COLUMN_TOTAL_AMOUNT = "total_amount";
-    private static final PropertyReader propertyReader = PropertyReader.INSTANCE;
-    private final String url = propertyReader.getUrl();
-    private final String user = propertyReader.getUser();
-    private final String password = propertyReader.getPassword();
+    private final ConnectionUtil connectionUtil;
 
     @Override
     public OrderDetails getById(Long id) {
         log.debug("OrderDetailsDAOImpl.getById");
         OrderDetails details = new OrderDetails();
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = connectionUtil.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_ORDER_DETAILS_BY_ID)) {
             ResultSet resultSet = preparedStatement.executeQuery();
             setParameters(details, resultSet);
@@ -51,7 +50,7 @@ public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     public List<OrderDetails> getAll() {
         log.debug("OrderDetailsDAOImpl.getAll");
         List<OrderDetails> orderDetails = new ArrayList<>();
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_ALL_ORDER_DETAILS)) {
             ResultSet result = statement.executeQuery();
             while (result.next()) {
@@ -68,7 +67,7 @@ public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     @Override
     public OrderDetails create(OrderDetails details) {
         log.debug("OrderDetailsDAOImpl.create");
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(CREATE_ORDER_DETAILS, Statement.RETURN_GENERATED_KEYS)) {
             prepareStatementForCreate(details, statement);
             statement.executeUpdate();
@@ -85,7 +84,7 @@ public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     @Override
     public OrderDetails update(OrderDetails orderDetails) {
         log.debug("OrderDetailsDAOImpl.update");
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(UPDATE_ORDER_DETAILS)) {
             prepareStatementForUpdate(orderDetails, statement);
             statement.executeUpdate();
@@ -98,7 +97,7 @@ public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     @Override
     public boolean deleteById(Long id) {
         log.debug("OrderDetailsDAOImpl.deleteById");
-        try (Connection connection = DriverManager.getConnection(url, user, password);
+        try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(DELETE_ORDER_DETAILS)) {
             statement.setLong(1, id);
             int affectedRows = statement.executeUpdate();

@@ -50,7 +50,7 @@ public class OrderDetailRepositoryImpl implements OrderDetailRepository {
     }
 
     @Override
-    public void delete(OrderDetails orderDetails) {
-        orderDetailsDAO.deleteById(orderDetails.getId());
+    public void delete(Long id) {
+        orderDetailsDAO.deleteById(id);
     }
 }

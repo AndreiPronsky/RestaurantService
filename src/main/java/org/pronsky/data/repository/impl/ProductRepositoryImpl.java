@@ -39,7 +39,7 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public void delete(Product product) {
-        productDAO.deleteById(product.getId());
+    public void delete(Long id) {
+        productDAO.deleteById(id);
     }
 }

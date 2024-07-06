@@ -9,5 +9,5 @@ public interface AbstractRepository<K, T> {
 
     T save(T entity);
 
-    void delete(T entity);
+    void delete(K id);
 }
