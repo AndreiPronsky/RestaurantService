@@ -17,9 +17,8 @@ public class ConnectionUtil {
 
     public Connection getConnection() {
         try {
-            Class.forName("org.postgresql.Driver");
             return DriverManager.getConnection(url, user, password);
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (SQLException e) {
             throw new ConnectionException("Unable to connect to database", e);
         }
     }
