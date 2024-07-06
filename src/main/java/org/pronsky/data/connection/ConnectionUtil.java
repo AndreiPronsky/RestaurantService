@@ -15,10 +15,6 @@ public class ConnectionUtil {
     private final String user = propertyReader.getUser();
     private final String password = propertyReader.getPassword();
 
-    private ConnectionUtil() {
-        propertyReader = PropertyReader.getInstance();
-    }
-
     public Connection getConnection() {
         try {
             Class.forName("org.postgresql.Driver");
