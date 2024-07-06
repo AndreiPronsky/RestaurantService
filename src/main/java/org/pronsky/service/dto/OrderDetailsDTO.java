@@ -1,6 +1,9 @@
 package org.pronsky.service.dto;
 
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.pronsky.data.entities.OrderDetails;
 
 import java.math.BigDecimal;

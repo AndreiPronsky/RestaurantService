@@ -1,6 +1,4 @@
-package org.pronsky.data.exceptions;
-
-import org.pronsky.ApplicationException;
+package org.pronsky.exceptions;
 
 public class UnableToFindException extends ApplicationException {
     public UnableToFindException() {

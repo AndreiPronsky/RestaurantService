@@ -32,13 +32,13 @@ public class OrderDetailsServiceImpl implements OrderDetailsService {
         BigDecimal totalAmount = orderDetailsDTO.getProducts().stream()
                 .map(productDTO -> productDTO.getPrice()
                         .multiply(BigDecimal.valueOf(productDTO.getQuantity())))
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         orderDetailsDTO.setTotalAmount(totalAmount);
         return mapper.toDto(repository.save(mapper.toEntity(orderDetailsDTO)));
     }
 
     @Override
-    public void delete(OrderDetailsDTO orderDetailsDTO) {
-        repository.delete(mapper.toEntity(orderDetailsDTO));
+    public void delete(Long id) {
+        repository.delete(id);
     }
 }

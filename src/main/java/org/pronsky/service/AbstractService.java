@@ -9,5 +9,5 @@ public interface AbstractService<K, T> {
 
     T save(T t);
 
-    void delete(T t);
+    void delete(K id);
 }

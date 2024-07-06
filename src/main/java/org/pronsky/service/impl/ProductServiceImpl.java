@@ -32,7 +32,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void delete(ProductDTO productDTO) {
-        repository.delete(mapper.toEntity(productDTO));
+    public void delete(Long id) {
+        repository.delete(id);
     }
 }
