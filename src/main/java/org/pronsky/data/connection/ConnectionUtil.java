@@ -10,7 +10,7 @@ import java.sql.SQLException;
 
 @RequiredArgsConstructor
 public class ConnectionUtil {
-    private final PropertyReader propertyReader;
+    private final PropertyReader propertyReader = PropertyReader.getInstance();
     private final String url = propertyReader.getUrl();
     private final String user = propertyReader.getUser();
     private final String password = propertyReader.getPassword();
