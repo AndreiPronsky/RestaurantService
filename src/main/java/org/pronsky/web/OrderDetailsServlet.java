@@ -1,34 +1,49 @@
-package org.pronsky.controller.impl;
+package org.pronsky.web;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.pronsky.controller.Controller;
+import lombok.NoArgsConstructor;
+import lombok.extern.log4j.Log4j;
+import org.mapstruct.factory.Mappers;
+import org.pronsky.data.connection.ConnectionUtil;
+import org.pronsky.data.dao.OrderDetailsDAO;
+import org.pronsky.data.dao.ProductCategoryDAO;
+import org.pronsky.data.dao.ProductDAO;
+import org.pronsky.data.dao.impl.OrderDetailsDAOImpl;
+import org.pronsky.data.dao.impl.ProductCategoryDAOImpl;
+import org.pronsky.data.dao.impl.ProductDAOImpl;
+import org.pronsky.data.repository.OrderDetailRepository;
+import org.pronsky.data.repository.impl.OrderDetailRepositoryImpl;
 import org.pronsky.service.OrderDetailsService;
 import org.pronsky.service.dto.OrderDetailsDTO;
-import org.pronsky.service.dto.ProductDTO;
+import org.pronsky.service.impl.OrderDetailsServiceImpl;
+import org.pronsky.service.mapper.Mapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
-@RequiredArgsConstructor
-public class OrderDetailsController implements Controller {
+@Log4j
+@NoArgsConstructor
+@WebServlet("/api/order_details")
+public class OrderDetailsServlet extends HttpServlet {
 
     public static final String CONTENT_TYPE = "application/json";
     public static final String CHARSET = "UTF-8";
-    private final OrderDetailsService orderDetailsService;
-    private final ObjectMapper objectMapper;
+    private final ConnectionUtil connectionUtil = new ConnectionUtil();
+    private final ProductDAO productDAO = new ProductDAOImpl(connectionUtil);
+    private final ProductCategoryDAO productCategoryDAO = new ProductCategoryDAOImpl(connectionUtil);
+    private final OrderDetailsDAO orderDetailsDAO = new OrderDetailsDAOImpl(connectionUtil);
+    private final OrderDetailRepository orderDetailRepository = new OrderDetailRepositoryImpl(orderDetailsDAO, productDAO, productCategoryDAO);
+    private final OrderDetailsService orderDetailsService = new OrderDetailsServiceImpl(Mappers.getMapper(Mapper.class), orderDetailRepository);
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        log.info("OrderDetailsController.doGet");
+        log.debug("Got request type GET : " + req.getRequestURI());
         Long id = processParams(req);
         if (id == null) {
             getAll(resp);
@@ -39,17 +54,11 @@ public class OrderDetailsController implements Controller {
 
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp) {
-        log.info("OrderDetailsController.doPost");
+        log.debug("Got request type POST : " + req.getRequestURI());
         try (BufferedReader reader = req.getReader()) {
             String payload = getPayload(reader);
-            JsonNode root = objectMapper.readTree(payload);
-            JsonNode orderDetails = root.get("order_details");
-            if (orderDetails.isArray()) {
-                for (JsonNode orderDetail : orderDetails) {
-                    OrderDetailsDTO orderDetailsDTO = deserialize(orderDetail);
-                    orderDetailsService.save(orderDetailsDTO);
-                }
-            }
+            OrderDetailsDTO orderDetailsDTO = objectMapper.readValue(payload, OrderDetailsDTO.class);
+            orderDetailsService.save(orderDetailsDTO);
             resp.setStatus(HttpServletResponse.SC_ACCEPTED);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -59,15 +68,12 @@ public class OrderDetailsController implements Controller {
 
     @Override
     public void doPut(HttpServletRequest req, HttpServletResponse resp) {
-        log.info("OrderDetailsController.doPut");
-        try {
-            JsonNode node = objectMapper.readTree(req.getReader());
-            OrderDetailsDTO orderDetailsDTO = deserialize(node);
-            OrderDetailsDTO updated = orderDetailsService.save(orderDetailsDTO);
-            resp.setContentType(CONTENT_TYPE);
-            resp.setCharacterEncoding(CHARSET);
-            resp.setStatus(HttpServletResponse.SC_OK);
-            objectMapper.writeValue(resp.getWriter(), updated);
+        log.debug("Got request type PUT : " + req.getRequestURI());
+        try (BufferedReader reader = req.getReader()) {
+            String payload = getPayload(reader);
+            OrderDetailsDTO orderDetailsDTO = objectMapper.readValue(payload, OrderDetailsDTO.class);
+            orderDetailsService.save(orderDetailsDTO);
+            resp.setStatus(HttpServletResponse.SC_ACCEPTED);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -76,7 +82,7 @@ public class OrderDetailsController implements Controller {
 
     @Override
     public void doDelete(HttpServletRequest req, HttpServletResponse resp) {
-        log.info("OrderDetailsController.doDelete");
+        log.debug("Got request type DELETE : " + req.getRequestURI());
         try {
             orderDetailsService.delete(Long.parseLong(req.getParameter("id")));
             resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -101,10 +107,8 @@ public class OrderDetailsController implements Controller {
             resp.setStatus(HttpServletResponse.SC_OK);
             objectMapper.writeValue(resp.getWriter(), orderDetailsDTO);
         } catch (NumberFormatException e) {
-            log.error(e.getMessage(), e);
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         } catch (IOException e) {
-            log.error(e.getMessage(), e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
@@ -117,32 +121,8 @@ public class OrderDetailsController implements Controller {
             resp.setStatus(HttpServletResponse.SC_OK);
             objectMapper.writeValue(resp.getWriter(), orderDetails);
         } catch (IOException e) {
-            log.error(e.getMessage(), e);
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
-    }
-
-    private OrderDetailsDTO deserialize(JsonNode node) {
-        OrderDetailsDTO orderDetails = new OrderDetailsDTO();
-        orderDetails.setId(node.get("id").asLong());
-        orderDetails.setOrderStatus(OrderDetailsDTO.OrderStatus.valueOf(node.get("order_status").asText().toUpperCase()));
-        orderDetails.setTotalAmount(BigDecimal.valueOf(node.get("total_amount").asDouble()));
-        List<ProductDTO> products = new ArrayList<>();
-        deserializeAndSetProducts(node, products, orderDetails);
-        return orderDetails;
-    }
-
-    private void deserializeAndSetProducts(JsonNode node, List<ProductDTO> products, OrderDetailsDTO orderDetailsDTO) {
-        for (JsonNode product : node.get("products")) {
-            ProductDTO productDTO = new ProductDTO();
-            productDTO.setId(product.get("id").asLong());
-            productDTO.setName(product.get("name").asText());
-            productDTO.setPrice(BigDecimal.valueOf(product.get("price").asDouble()));
-            productDTO.setQuantity(product.get("quantity").asInt());
-            productDTO.setAvailable(product.get("available").asBoolean());
-            products.add(productDTO);
-        }
-        orderDetailsDTO.setProducts(products);
     }
 
     private String getPayload(BufferedReader reader) throws IOException {
@@ -153,5 +133,4 @@ public class OrderDetailsController implements Controller {
         }
         return buffer.toString();
     }
-
 }

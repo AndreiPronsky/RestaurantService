@@ -2,8 +2,8 @@ package org.pronsky.data.dao;
 
 import org.pronsky.data.entities.ProductCategory;
 
-import java.util.List;
+import java.util.Set;
 
 public interface ProductCategoryDAO extends AbstractDAO<Long, ProductCategory> {
-    List<ProductCategory> getAllByProductId(Long productId);
+    Set<ProductCategory> getAllByProductId(Long productId);
 }
