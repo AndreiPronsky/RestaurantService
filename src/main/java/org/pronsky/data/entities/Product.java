@@ -3,7 +3,7 @@ package org.pronsky.data.entities;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Set;
 
 @Data
 public class Product {
@@ -12,5 +12,5 @@ public class Product {
     private BigDecimal price;
     private Integer quantity;
     private boolean available;
-    private List<ProductCategory> productCategories;
+    private Set<ProductCategory> productCategories;
 }

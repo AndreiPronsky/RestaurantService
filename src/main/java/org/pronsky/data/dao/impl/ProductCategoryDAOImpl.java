@@ -1,7 +1,7 @@
 package org.pronsky.data.dao.impl;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j;
 import org.pronsky.data.connection.ConnectionUtil;
 import org.pronsky.data.dao.ProductCategoryDAO;
 import org.pronsky.data.entities.ProductCategory;
@@ -12,12 +12,13 @@ import org.pronsky.exceptions.UnableToFindException;
 import org.pronsky.exceptions.UnableToUpdateException;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-@Slf4j
+/**
+ * DAO implementation for the ProductCategory entity using JDBC.
+ * This class provides methods for database operations related to product categories.
+ */
+@Log4j
 @RequiredArgsConstructor
 public class ProductCategoryDAOImpl implements ProductCategoryDAO {
     private static final String CREATE_CATEGORY = "INSERT INTO product_categories (name, category_type) " +
@@ -30,7 +31,7 @@ public class ProductCategoryDAOImpl implements ProductCategoryDAO {
             "FROM product_categories pc " +
             "JOIN categories_to_types ctt ON ctt.category_id = pc.id " +
             "JOIN category_types ct ON pc.id = ctt.category_id WHERE pc.id = ?";
-    private static final String FIND_ALL_BY_PRODUCT_ID = "SELECT p.name, pc.name AS category_name, ct.name AS type_name " +
+    private static final String FIND_ALL_BY_PRODUCT_ID = "SELECT pc.name, pc.id, ct.name AS type_name " +
             "FROM product_categories pc " +
             "JOIN product_to_category ptc ON ptc.category_id = pc.id " +
             "JOIN products p ON p.id = ptc.product_id " +
@@ -42,10 +43,17 @@ public class ProductCategoryDAOImpl implements ProductCategoryDAO {
             "JOIN category_types ct ON ct.id = pc.category_type ";
     private static final String DELETE_CATEGORY = "DELETE FROM product_categories pc WHERE pc.id = ?";
     private static final String COLUMN_ID = "id";
+    private static final String COLUMN_TYPE_NAME = "type_name";
     private static final String COLUMN_NAME = "name";
-    private static final String COLUMN_TYPE = "type_name";
     private final ConnectionUtil connectionUtil;
 
+    /**
+     * Retrieves a product category by its ID from the database.
+     *
+     * @param id The ID of the product category to retrieve.
+     * @return The product category with the specified ID.
+     * @throws UnableToFindException If an error occurs during the retrieval process.
+     */
     @Override
     public ProductCategory getById(Long id) {
         log.debug("ProductCategoryDAOImpl.getById");
@@ -55,12 +63,19 @@ public class ProductCategoryDAOImpl implements ProductCategoryDAO {
             statement.setLong(1, id);
             ResultSet result = statement.executeQuery();
             setParameters(productCategory, result);
+            log.debug("fetched category : " + productCategory);
             return productCategory;
         } catch (SQLException e) {
             throw new UnableToFindException(e);
         }
     }
 
+    /**
+     * Retrieves all product categories from the database.
+     *
+     * @return A list of all product categories.
+     * @throws UnableToFindException If an error occurs during the retrieval process.
+     */
     @Override
     public List<ProductCategory> getAll() {
         log.debug("ProductCategoryDAOImpl.getAll");
@@ -73,12 +88,20 @@ public class ProductCategoryDAOImpl implements ProductCategoryDAO {
                 ProductCategory category = getById(id);
                 categories.add(category);
             }
+            log.debug("Fetched categories : " + categories);
             return categories;
         } catch (SQLException e) {
             throw new UnableToFindException(e);
         }
     }
 
+    /**
+     * Creates a new product category record in the database.
+     *
+     * @param productCategory The product category object to create.
+     * @return The created product category object with the generated ID.
+     * @throws UnableToCreateException If an error occurs during the creation process.
+     */
     @Override
     public ProductCategory create(ProductCategory productCategory) {
         log.debug("ProductCategoryDAOImpl.create");
@@ -97,6 +120,13 @@ public class ProductCategoryDAOImpl implements ProductCategoryDAO {
         }
     }
 
+    /**
+     * Updates an existing product category record in the database.
+     *
+     * @param productCategory The product category object to update.
+     * @return The updated product category object.
+     * @throws UnableToUpdateException If an error occurs during the update process.
+     */
     @Override
     public ProductCategory update(ProductCategory productCategory) {
         log.debug("ProductCategoryDAOImpl.update");
@@ -110,6 +140,13 @@ public class ProductCategoryDAOImpl implements ProductCategoryDAO {
         }
     }
 
+    /**
+     * Deletes a product category record from the database by its ID.
+     *
+     * @param id The ID of the product category to delete.
+     * @return True if the deletion was successful, false otherwise.
+     * @throws UnableToDeleteException If an error occurs during the deletion process.
+     */
     @Override
     public boolean deleteById(Long id) {
         log.debug("ProductCategoryDAOImpl.deleteById");
@@ -123,26 +160,36 @@ public class ProductCategoryDAOImpl implements ProductCategoryDAO {
         }
     }
 
+    /**
+     * Retrieves all product categories associated with a specific product ID.
+     *
+     * @param productId The ID of the product.
+     * @return A list of product categories associated with the product.
+     * @throws UnableToFindException If an error occurs during the retrieval process.
+     */
     @Override
-    public List<ProductCategory> getAllByProductId(Long productId) {
+    public Set<ProductCategory> getAllByProductId(Long productId) {
         log.debug("ProductCategoryDAOImpl.getAllByProductId");
-        Map<Long, ProductCategory> productCategoryMap = new HashMap<>();
         try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_ALL_BY_PRODUCT_ID)) {
+            Map<Long, ProductCategory> productCategoryMap = new HashMap<>();
             statement.setLong(1, productId);
             ResultSet resultSet = statement.executeQuery();
+            Set<CategoryType> types = new HashSet<>();
             while (resultSet.next()) {
-                Long id = resultSet.getLong(COLUMN_ID);
+                Long categoryId = resultSet.getLong(COLUMN_ID);
                 String name = resultSet.getString(COLUMN_NAME);
-                String typeName = resultSet.getString(COLUMN_TYPE);
+                String typeName = resultSet.getString(COLUMN_TYPE_NAME);
                 CategoryType categoryType = CategoryType.valueOf(typeName);
                 ProductCategory productCategory = new ProductCategory();
-                productCategory.setId(id);
+                productCategory.setId(categoryId);
                 productCategory.setName(name);
-                productCategoryMap.put(id, productCategory);
-                productCategory.getTypes().add(categoryType);
+                types.add(categoryType);
+                productCategory.setTypes(types);
+                productCategoryMap.put(categoryId, productCategory);
             }
-            return new ArrayList<>(productCategoryMap.values());
+            log.debug("Fetched categories : " + productCategoryMap);
+            return new HashSet<>(productCategoryMap.values());
         } catch (SQLException e) {
             throw new UnableToFindException(e);
         }
@@ -150,9 +197,12 @@ public class ProductCategoryDAOImpl implements ProductCategoryDAO {
 
     private void createCategoryToTypeRelation(ProductCategory category, Connection connection) throws SQLException {
         for (CategoryType type : category.getTypes()) {
-            PreparedStatement statement = connection.prepareStatement(CREATE_CATEGORY_TO_TYPE_RELATION);
-            statement.setLong(1, category.getId());
-            statement.setLong(2, type.ordinal());
+            try (PreparedStatement statement = connection.prepareStatement(CREATE_CATEGORY_TO_TYPE_RELATION)) {
+                statement.setLong(1, category.getId());
+                statement.setLong(2, type.ordinal());
+            } catch (SQLException e) {
+                throw new UnableToCreateException("Unable to create relations", e);
+            }
         }
     }
 

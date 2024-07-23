@@ -1,27 +1,35 @@
 package org.pronsky.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Set;
 
 @NoArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode
 public class ProductDTO {
-    private Long id;
-    private String name;
-    private BigDecimal price;
-    private Integer quantity;
-    private boolean available;
-    private List<ProductCategoryDTO> categories;
 
-    @Override
-    public String toString() {
-        return super.toString();
-    }
+    @JsonProperty("id")
+    private Long id;
+
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("price")
+    private BigDecimal price;
+
+    @JsonProperty("quantity")
+    private Integer quantity;
+
+    @JsonProperty("available")
+    private boolean available;
+
+    @JsonProperty("productCategories")
+    private Set<ProductCategoryDTO> productCategories;
 }

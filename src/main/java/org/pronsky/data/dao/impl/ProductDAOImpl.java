@@ -1,7 +1,7 @@
 package org.pronsky.data.dao.impl;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j;
 import org.pronsky.data.connection.ConnectionUtil;
 import org.pronsky.data.dao.ProductDAO;
 import org.pronsky.data.entities.Product;
@@ -15,7 +15,11 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
+/**
+ * DAO implementation for the Product entity using JDBC.
+ * This class provides methods for database operations related to products.
+ */
+@Log4j
 @RequiredArgsConstructor
 public class ProductDAOImpl implements ProductDAO {
 
@@ -34,6 +38,10 @@ public class ProductDAOImpl implements ProductDAO {
             "JOIN details_to_products dtp on p.id = dtp.product_id " +
             "WHERE dtp.order_details_id = ?";
     private static final String DELETE_PRODUCT = "DELETE FROM products p WHERE p.id = ?";
+    private static final String DELETE_PRODUCT_TO_CATEGORY_RELATIONS = "DELETE FROM product_to_category ptc " +
+            "WHERE ptc.product_id = ?";
+    private static final String DELETE_DETAILS_TO_PRODUCT_RELATIONS = "DELETE FROM details_to_products dtp " +
+            "WHERE dtp.product_id = ?";
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_NAME = "name";
     private static final String COLUMN_PRICE = "price";
@@ -41,6 +49,13 @@ public class ProductDAOImpl implements ProductDAO {
     private static final String COLUMN_AVAILABLE = "available";
     private final ConnectionUtil connectionUtil;
 
+    /**
+     * Retrieves a product by its ID from the database.
+     *
+     * @param id The ID of the product to retrieve.
+     * @return The product with the specified ID.
+     * @throws UnableToFindException If an error occurs during the retrieval process.
+     */
     @Override
     public Product getById(Long id) {
         log.debug("ProductDAOImpl.getById");
@@ -48,14 +63,26 @@ public class ProductDAOImpl implements ProductDAO {
         try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_PRODUCT_BY_ID)) {
             statement.setLong(1, id);
-            ResultSet result = statement.executeQuery();
-            setParameters(product, result);
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            product.setId(resultSet.getLong(COLUMN_ID));
+            product.setName(resultSet.getString(COLUMN_NAME));
+            product.setPrice(resultSet.getBigDecimal(COLUMN_PRICE));
+            product.setQuantity(resultSet.getInt(COLUMN_QUANTITY));
+            product.setAvailable(resultSet.getBoolean(COLUMN_AVAILABLE));
+            log.debug("Fetched product : " + product);
             return product;
         } catch (SQLException e) {
             throw new UnableToFindException(e);
         }
     }
 
+    /**
+     * Retrieves all products from the database.
+     *
+     * @return A list of all products.
+     * @throws UnableToFindException If an error occurs during the retrieval process.
+     */
     @Override
     public List<Product> getAll() {
         log.debug("ProductDAOImpl.getAll");
@@ -68,12 +95,20 @@ public class ProductDAOImpl implements ProductDAO {
                 Product product = getById(id);
                 products.add(product);
             }
+            log.debug("Fetched products : " + products);
             return products;
         } catch (SQLException e) {
             throw new UnableToFindException(e);
         }
     }
 
+    /**
+     * Creates a new product record in the database.
+     *
+     * @param product The product object to create.
+     * @return The created product object with the generated ID.
+     * @throws UnableToCreateException If an error occurs during the creation process.
+     */
     @Override
     public Product create(Product product) {
         log.debug("ProductDAOImpl.create");
@@ -84,14 +119,21 @@ public class ProductDAOImpl implements ProductDAO {
             ResultSet result = statement.getGeneratedKeys();
             if (result.next()) {
                 product.setId(result.getLong(COLUMN_ID));
-                setProductToCategoryRelations(product, connection);
+                setProductToCategoryRelations(product);
             }
-            return getById(result.getLong(COLUMN_ID));
+            return product;
         } catch (SQLException e) {
             throw new UnableToCreateException(e);
         }
     }
 
+    /**
+     * Updates an existing product record in the database.
+     *
+     * @param product The product object to update.
+     * @return The updated product object.
+     * @throws UnableToUpdateException If an error occurs during the update process.
+     */
     @Override
     public Product update(Product product) {
         log.debug("ProductDAOImpl.update");
@@ -99,35 +141,56 @@ public class ProductDAOImpl implements ProductDAO {
              PreparedStatement statement = connection.prepareStatement(UPDATE_PRODUCT)) {
             prepareStatementForUpdate(product, statement);
             statement.executeUpdate();
-            return getById(product.getId());
+            return product;
         } catch (SQLException e) {
             throw new UnableToUpdateException(e);
         }
     }
 
+    /**
+     * Deletes a product record from the database by its ID.
+     *
+     * @param id The ID of the product to delete.
+     * @return True if the deletion was successful, false otherwise.
+     * @throws UnableToDeleteException If an error occurs during the deletion process.
+     */
     @Override
     public boolean deleteById(Long id) {
         log.debug("ProductDAOImpl.deleteById");
         try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(DELETE_PRODUCT)) {
+            boolean categoryRelationsAreDeleted = deleteProductToCategoryRelations(id);
+            boolean detailRelationsAreDeleted = deleteDetailsToProductRelations(id);
             statement.setLong(1, id);
             int affectedRows = statement.executeUpdate();
-            return affectedRows == 1;
+            return (affectedRows == 1 && detailRelationsAreDeleted && categoryRelationsAreDeleted);
         } catch (SQLException e) {
             throw new UnableToDeleteException(e);
         }
     }
 
+    /**
+     * Retrieves all products associated with a specific order ID.
+     *
+     * @param orderId The ID of the order.
+     * @return A list of products associated with the order.
+     * @throws UnableToFindException If an error occurs during the retrieval process.
+     */
     @Override
     public List<Product> getAllByOrderId(long orderId) {
         log.debug("ProductDAOImpl.getAllByOrderId");
         List<Product> products = new ArrayList<>();
         try (Connection connection = connectionUtil.getConnection();
              PreparedStatement statement = connection.prepareStatement(FIND_ALL_BY_ORDER_ID)) {
+            statement.setLong(1, orderId);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Product product = new Product();
-                setParameters(product, resultSet);
+                product.setId(resultSet.getLong(COLUMN_ID));
+                product.setName(resultSet.getString(COLUMN_NAME));
+                product.setPrice(resultSet.getBigDecimal(COLUMN_PRICE));
+                product.setQuantity(resultSet.getInt(COLUMN_QUANTITY));
+                product.setAvailable(resultSet.getBoolean(COLUMN_AVAILABLE));
                 products.add(product);
             }
             return products;
@@ -138,34 +201,47 @@ public class ProductDAOImpl implements ProductDAO {
 
     private void prepareStatementForCreate(Product product, PreparedStatement statement) throws SQLException {
         statement.setString(1, product.getName());
-        statement.setString(2, String.valueOf(product.getPrice()));
+        statement.setBigDecimal(2, product.getPrice());
         statement.setInt(3, product.getQuantity());
         statement.setBoolean(4, product.isAvailable());
     }
 
     private void prepareStatementForUpdate(Product product, PreparedStatement statement) throws SQLException {
         statement.setString(1, product.getName());
-        statement.setString(2, String.valueOf(product.getPrice()));
+        statement.setBigDecimal(2, product.getPrice());
         statement.setInt(3, product.getQuantity());
         statement.setBoolean(4, product.isAvailable());
         statement.setLong(5, product.getId());
     }
 
-    private void setParameters(Product product, ResultSet result) throws SQLException {
-        while (result.next()) {
-            product.setId(result.getLong(COLUMN_ID));
-            product.setName(result.getString(COLUMN_NAME));
-            product.setPrice(result.getBigDecimal(COLUMN_PRICE));
-            product.setQuantity(result.getInt(COLUMN_QUANTITY));
-            product.setAvailable(result.getBoolean(COLUMN_AVAILABLE));
+    private void setProductToCategoryRelations(Product product) throws SQLException {
+        for (ProductCategory category : product.getProductCategories()) {
+            try (Connection connection = connectionUtil.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(CREATE_PRODUCT_TO_CATEGORY_RELATION)) {
+                statement.setLong(1, product.getId());
+                statement.setLong(2, category.getId());
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                throw new UnableToCreateException("Unable to create relations", e);
+            }
         }
     }
 
-    private void setProductToCategoryRelations(Product product, Connection connection) throws SQLException {
-        for (ProductCategory category : product.getProductCategories()) {
-            PreparedStatement categoryStatement = connection.prepareStatement(CREATE_PRODUCT_TO_CATEGORY_RELATION);
-            categoryStatement.setLong(1, product.getId());
-            categoryStatement.setLong(2, category.getId());
+    private boolean deleteProductToCategoryRelations(Long id) throws SQLException {
+        try (Connection connection = connectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(DELETE_PRODUCT_TO_CATEGORY_RELATIONS)) {
+            statement.setLong(1, id);
+            int affectedRows = statement.executeUpdate();
+            return affectedRows >= 1;
+        }
+    }
+
+    private boolean deleteDetailsToProductRelations(Long id) throws SQLException {
+        try (Connection connection = connectionUtil.getConnection();
+             PreparedStatement statement = connection.prepareStatement(DELETE_DETAILS_TO_PRODUCT_RELATIONS)) {
+            statement.setLong(1, id);
+            int affectedRows = statement.executeUpdate();
+            return affectedRows >= 1;
         }
     }
 }
