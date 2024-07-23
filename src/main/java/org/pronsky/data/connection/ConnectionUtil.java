@@ -1,7 +1,7 @@
 package org.pronsky.data.connection;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
 import org.pronsky.exceptions.ConnectionException;
 import org.pronsky.utils.PropertyReader;
 
@@ -9,7 +9,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-@Log4j
+@Log4j2
 @RequiredArgsConstructor
 public class ConnectionUtil {
     private final PropertyReader propertyReader = PropertyReader.getInstance();

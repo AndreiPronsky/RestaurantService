@@ -1,13 +1,13 @@
 package org.pronsky.utils;
 
 import lombok.Getter;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-@Log4j
+@Log4j2
 @Getter
 public class PropertyReader {
     static PropertyReader instance;

@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,7 @@ class ProductDAOImplTest {
     private static final Long ID = 1L;
     private static final String FIND_PRODUCT_BY_ID = "SELECT p.id, p.name, p.price, p.quantity, p.available " +
             "FROM products p WHERE p.id = ?";
+    private static final int EXPECTED_PRODUCT_LIST_SIZE = 35;
     private static ConnectionUtil connectionUtil;
     private static ProductDAO productDAO;
     private static Connection connection;
@@ -40,7 +42,7 @@ class ProductDAOImplTest {
 
     @Container
     public PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest")
-            .withDatabaseName("testdb")
+            .withDatabaseName("test")
             .withUsername("testuser")
             .withPassword("testpassword");
 
@@ -72,7 +74,7 @@ class ProductDAOImplTest {
         categories.add(anotherCategory);
 
         newProduct = new Product();
-        newProduct.setName("New product 3");
+        newProduct.setName(LocalDateTime.now().toString());
         newProduct.setPrice(new BigDecimal("55.99"));
         newProduct.setQuantity(10);
         newProduct.setAvailable(true);
@@ -141,7 +143,7 @@ class ProductDAOImplTest {
     @Test
     void testGetAllProducts() {
         List<Product> actual = productDAO.getAll();
-        assertEquals(32, actual.size());
+        assertEquals(EXPECTED_PRODUCT_LIST_SIZE, actual.size());
     }
 
     @Test
