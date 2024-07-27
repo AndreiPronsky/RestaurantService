@@ -1,7 +1,7 @@
 package org.pronsky.data.dao.impl;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
 import org.pronsky.data.connection.ConnectionUtil;
 import org.pronsky.data.dao.OrderDetailsDAO;
 import org.pronsky.data.entities.OrderDetails;
@@ -19,7 +19,7 @@ import java.util.List;
  * DAO implementation for the OrderDetails entity using JDBC.
  * This class provides methods for database operations related to order details.
  */
-@Log4j
+@Log4j2
 @RequiredArgsConstructor
 public class OrderDetailsDAOImpl implements OrderDetailsDAO {
     private static final String CREATE_ORDER_DETAILS = "INSERT INTO order_details (status_id, total_amount) VALUES (?, ?)";

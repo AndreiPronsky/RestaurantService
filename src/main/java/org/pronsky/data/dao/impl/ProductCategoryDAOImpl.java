@@ -1,7 +1,7 @@
 package org.pronsky.data.dao.impl;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
 import org.pronsky.data.connection.ConnectionUtil;
 import org.pronsky.data.dao.ProductCategoryDAO;
 import org.pronsky.data.entities.ProductCategory;
@@ -18,7 +18,7 @@ import java.util.*;
  * DAO implementation for the ProductCategory entity using JDBC.
  * This class provides methods for database operations related to product categories.
  */
-@Log4j
+@Log4j2
 @RequiredArgsConstructor
 public class ProductCategoryDAOImpl implements ProductCategoryDAO {
     private static final String CREATE_CATEGORY = "INSERT INTO product_categories (name, category_type) " +

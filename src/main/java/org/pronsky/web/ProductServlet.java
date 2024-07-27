@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NoArgsConstructor;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
 import org.mapstruct.factory.Mappers;
 import org.pronsky.data.connection.ConnectionUtil;
 import org.pronsky.data.dao.ProductCategoryDAO;
@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-@Log4j
+@Log4j2
 @NoArgsConstructor
 @WebServlet("/api/products")
 public class ProductServlet extends HttpServlet {

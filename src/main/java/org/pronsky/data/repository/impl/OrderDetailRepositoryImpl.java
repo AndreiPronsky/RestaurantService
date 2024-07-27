@@ -1,7 +1,7 @@
 package org.pronsky.data.repository.impl;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
 import org.pronsky.data.dao.OrderDetailsDAO;
 import org.pronsky.data.dao.ProductCategoryDAO;
 import org.pronsky.data.dao.ProductDAO;
@@ -16,7 +16,7 @@ import java.util.List;
  *
  * @author [Andrei Pronsky]
  */
-@Log4j
+@Log4j2
 @RequiredArgsConstructor
 public class OrderDetailRepositoryImpl implements OrderDetailRepository {
     private final OrderDetailsDAO orderDetailsDAO;

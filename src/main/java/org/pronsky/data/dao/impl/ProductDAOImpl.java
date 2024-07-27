@@ -1,7 +1,7 @@
 package org.pronsky.data.dao.impl;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
 import org.pronsky.data.connection.ConnectionUtil;
 import org.pronsky.data.dao.ProductDAO;
 import org.pronsky.data.entities.Product;
@@ -19,7 +19,7 @@ import java.util.List;
  * DAO implementation for the Product entity using JDBC.
  * This class provides methods for database operations related to products.
  */
-@Log4j
+@Log4j2
 @RequiredArgsConstructor
 public class ProductDAOImpl implements ProductDAO {
 
